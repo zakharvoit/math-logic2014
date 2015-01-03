@@ -2,14 +2,18 @@ open Verification
 open Util
 
 let _ =
-  let asserts = ref [] in
+  let lines_list   = ref [] in
   try
-    let lexbuf = Lexing.from_channel stdin in
     while true do
-      let result = Parser.expr_line Lexer.token lexbuf in
-      asserts := result :: !asserts
+      lines_list := String.trim (read_line ()) :: !lines_list
     done
-  with Lexer.Eof ->
-    ignore (Array.map (print_endline |> string_of_annotation)
-              (verify (List.rev !asserts)));
-    ()
+  with End_of_file -> begin
+      let lines       = Array.of_list (List.rev !lines_list) in
+      let asserts     = Array.map (parse_string Parser.expr_line) lines in
+      let annotations = verify asserts in
+      for i = 0 to Array.length lines - 1 do
+        print_endline ("(" ^ string_of_int (i + 1) ^ ") "
+                       ^ lines.(i) ^ " "
+                       ^ string_of_annotation annotations.(i))
+      done
+    end

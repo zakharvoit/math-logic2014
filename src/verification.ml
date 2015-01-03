@@ -1,3 +1,5 @@
+open Util
+
 module E = Expression
 module A = Axioms
 module H = Hashtbl
@@ -12,17 +14,18 @@ type annotation = NotProved
                 | ByAxiom of int
                 | ByModusPonens of int * int
 
-let string_of_annotation = function
-  | NotProved            -> "not proved"
-  | ByAxiom a            -> "by axiom " ^ string_of_int (a + 1)
-  | ByModusPonens (a, b) -> "by M. P. "
+let string_of_annotation = (fun s -> "(" ^ s ^ ")")
+                         |> function
+  | NotProved            -> "Не доказано"
+  | ByAxiom a            -> "Сх. акс. " ^ string_of_int (a + 1)
+  | ByModusPonens (a, b) -> "M.P. "
                             ^ string_of_int (a + 1) ^ ", "
                             ^ string_of_int (b + 1)
 
-class verifier (list) =
+class verifier (asserts) =
 object (self)
-  val mutable assertions = Array.of_list list
-  val annotations        = Array.make (List.length list) NotProved
+  val assertions         = (asserts : E.expression array)
+  val annotations        = Array.make (Array.length asserts) NotProved
 
   method annotations = annotations
 

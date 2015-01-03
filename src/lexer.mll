@@ -1,7 +1,5 @@
 {
   open Parser
-         
-  exception Eof
 }
 
 let whitespace = [' ' '\t' '\r']
@@ -17,4 +15,4 @@ rule token = parse
              | '&'              { TAnd }
              | '|'              { TOr }
              | "->"             { TImpl }
-             | eof              { raise Eof }
+             | eof              { raise End_of_file }

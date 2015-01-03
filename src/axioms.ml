@@ -1,8 +1,6 @@
 open Util
 
-let axioms = Array.map (Parser.expr_line Lexer.token
-                        |> Lexing.from_string
-                        |> (fun s -> s ^ "\n"))
+let axioms = Array.map (parse_string Parser.expr_line)
                        [| "A -> B -> A"
                         ; "(A -> B) -> (A -> B -> C) -> (A -> C)"
                         ; "A -> B -> A & B"
