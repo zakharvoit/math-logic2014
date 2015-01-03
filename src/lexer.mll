@@ -4,8 +4,8 @@
   exception Eof
 }
 
-let whitespace = [' ' '\t']
-let variable = ['A'-'Z']['A'-'Z' '0'-'9']*
+let whitespace = [' ' '\t' '\r']
+let variable   = ['A'-'Z']['A'-'Z' '0'-'9']*
 
 rule token = parse
              | whitespace       { token lexbuf }
