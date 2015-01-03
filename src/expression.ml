@@ -6,6 +6,11 @@ type expression = Var of string
 		| Or of expression * expression
 		| Impl of expression * expression
 
+let (!@) e = Not e
+let (@&) a b = And (a, b)
+let (@|) a b = Or (a, b)
+let (@->) a b = Impl (a, b)
+
 let rec string_of_expression = function
   | Var s       -> s
   | Not e       -> "!" ^ string_of_expression e

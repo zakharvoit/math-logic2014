@@ -1,19 +1,30 @@
 %{
-  module E = Expression
+    module E = Expression
 %}
 
 %token <string> TVar
 %token TNot TAnd TOr TImpl
+%token TComma TTourniquet
 %token TOpenPar TClosePar TEoln
 %right TImpl
 %left TOr
 %left TAnd
 %nonassoc TNot
 %start expr_line
+%start assumptions_line
+%type <Expression.expression list * Expression.expression> assumptions_line
 %type <Expression.expression> expr_line
 %%
 
-expr_line: expr TEoln { $1 };
+assumptions_line: csexprs TTourniquet expr TEoln { ($1, $3) }
+    ;
+
+csexprs: expr                { [ $1 ] }
+       | csexprs TComma expr { $3 :: $1 }
+       ;
+
+expr_line: expr TEoln { $1 }
+    ;
   
 expr: TVar                    { E.Var $1 }
     | TOpenPar expr TClosePar { $2 }

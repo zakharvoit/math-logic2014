@@ -13,6 +13,8 @@ rule token = parse
              | ')'              { TClosePar }
              | '!'              { TNot }
              | '&'              { TAnd }
+             | ','              { TComma }
+             | "|-"             { TTourniquet }
              | '|'              { TOr }
              | "->"             { TImpl }
              | eof              { raise End_of_file }
