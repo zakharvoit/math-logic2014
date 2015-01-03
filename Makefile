@@ -12,4 +12,8 @@ build: $(NATIVES)
 %.native:
 	ocamlbuild -Is $(INCLUDE_DIRS) $@
 
+clean:
+	rm -rf _build
+	rm -f *.native
+
 .PHONY: all build clean
