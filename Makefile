@@ -16,12 +16,12 @@ build: $(NATIVES)
 
 generate: $(GENERATE_TASKS)
 
-test: $(TEST_TASKS)
+test: build $(TEST_TASKS)
 
-%.test:
+%.test: %.native
 	./test/test.pl $(@:%.test=%)
 
-%.generate:
+%.generate: %.native
 	./test/generate.pl $(@:%.generate=%)
 
 clean:
