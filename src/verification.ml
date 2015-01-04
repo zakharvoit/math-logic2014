@@ -33,19 +33,22 @@ object (self)
 
   method annotations = annotations
 
-  method check_list e result axioms =
+  method check_list e cmp result axioms =
     for i = 0 to Array.length axioms - 1 do
-      if e =~~ axioms.(i) then begin
+      if cmp e axioms.(i) then begin
           raise (result i)
         end
     done
 
   method check_assumptions e = self#check_list
                                  e
+                                 (=)
                                  (fun a -> AssumptionFound a)
                                  assumptions
+
   method check_axioms e = self#check_list
                             e
+                            (=~~)
                             (fun a -> AxiomFound a)
                             A.axioms
 
