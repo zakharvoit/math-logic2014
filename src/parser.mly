@@ -6,6 +6,8 @@
 %token TNot TAnd TOr TImpl
 %token TComma TTourniquet
 %token TOpenPar TClosePar TEoln
+%left TTourniquet
+%left TComma
 %right TImpl
 %left TOr
 %left TAnd
