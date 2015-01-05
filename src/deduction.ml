@@ -33,3 +33,8 @@ let deduce asserts proof a b =
     | V.NotProved                  -> raise (NotProved i)
   done;
   Array.of_list (List.rev !new_asserts)
+
+let deduce_2 assumptions proof assertion =
+  let proof_arr = Array.of_list proof in
+  let annotations = V.verify_with_assumptions proof_arr (Array.of_list assumptions) in
+  Array.to_list (deduce proof_arr annotations (List.hd assumptions) assertion)
