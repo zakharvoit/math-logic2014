@@ -30,6 +30,10 @@ object (self)
   val assertions         = (asserts : E.expression array)
   val annotations        = Array.make (Array.length asserts) NotProved
   val assumptions        = assumptions
+  val right              = H.create 1024
+  val answer             = H.create 1024
+  val proved             = H.create 1024
+                                    
 
   method annotations = annotations
 
@@ -52,31 +56,48 @@ object (self)
                             (fun a -> AxiomFound a)
                             A.axioms
 
-  method check_modus_ponens e pos =
-    let right_hand = H.create 1024 in
-    for i = 0 to pos - 1 do
-      match assertions.(i) with
-      | E.Impl (left, right)
-           when right = e -> H.replace right_hand left i
-      | _                 -> ()
-    done;
-    for i = 0 to pos - 1 do
-      if H.mem right_hand assertions.(i) then
-        raise (ModusPonensFound (i, H.find right_hand assertions.(i)))
-    done;
-    raise NotFound
+  method check_modus_ponens e =
+    if not (H.mem answer e) then raise NotFound
+    else
+      let (a, b) = H.find answer e in
+      raise (ModusPonensFound (a, b))
 
+  method update_modus_ponens e pos =
+    if H.mem right e
+    then begin
+      List.iter (fun i ->
+                 let a = assertions.(i) in
+                 match a with
+                 | Impl (l, r) -> H.replace answer r (pos, i)
+                 | _           -> failwith "Impl expected"
+                ) (H.find right e);
+      H.replace right e []
+      end;
+    begin match e with
+          | E.Impl (l, r) -> if H.mem proved l
+                             then H.replace answer r (H.find proved l, pos)
+                             else if H.mem right l
+                             then H.replace right l (pos :: H.find right l)
+                             else H.add right l [pos]
+          | _           -> ()
+    end;
+    H.replace proved e pos
+                     
   method add pos =
     let e = assertions.(pos) in
-    try 
-      self#check_axioms e;
-      self#check_assumptions e;
-      self#check_modus_ponens e pos
-    with
-    | AxiomFound a            -> annotations.(pos) <- ByAxiom a
-    | AssumptionFound a       -> annotations.(pos) <- ByAssumption a
-    | ModusPonensFound (a, b) -> annotations.(pos) <- ByModusPonens (a, b)
-    | NotFound                -> annotations.(pos) <- NotProved
+    
+    begin
+      try 
+        self#check_axioms e;
+        self#check_assumptions e;
+        self#check_modus_ponens e
+      with
+      | AxiomFound a            -> annotations.(pos) <- ByAxiom a
+      | AssumptionFound a       -> annotations.(pos) <- ByAssumption a
+      | ModusPonensFound (a, b) -> annotations.(pos) <- ByModusPonens (a, b)
+      | NotFound                -> annotations.(pos) <- NotProved
+    end;
+    self#update_modus_ponens e pos
 
   method add_all =
     for i = 0 to Array.length assertions - 1 do

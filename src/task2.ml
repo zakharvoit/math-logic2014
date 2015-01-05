@@ -17,5 +17,4 @@ let _ =
   print_string "|- ";
   print_string (assumpts_str.(0) ^ " -> ");
   print_endline (Expression.string_of_expression b);
-  ignore (Array.map (print_endline |> Expression.string_of_expression) deduction)
-
+  Array.iter (print_endline |> Expression.string_of_expression) deduction

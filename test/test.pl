@@ -18,6 +18,7 @@ while (glob "./test-files/$task/*.in") {
 	} else {
 		print colored ['green'], "OK $_\n";
 	}
+	system("grep -ir 'Не доказано' buffer.txt");
 }
 
 `rm -f buffer.txt`
