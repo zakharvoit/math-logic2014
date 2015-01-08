@@ -68,7 +68,7 @@ object (self)
       List.iter (fun i ->
                  let a = assertions.(i) in
                  match a with
-                 | Impl (l, r) -> H.replace answer r (pos, i)
+                 | E.Impl (l, r) -> H.replace answer r (pos, i)
                  | _           -> failwith "Impl expected"
                 ) (H.find right e);
       H.replace right e []
