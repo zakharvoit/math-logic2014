@@ -16,7 +16,7 @@ let get_variables =
   | Or (a, b)
   | Impl (a, b) -> let vars' = get_variables' vars a in
                    get_variables' vars' b
-  in (List.sort_uniq compare) |> (get_variables' [])
+  in (Util.sort_uniq compare) |> (get_variables' [])
 
 let inverse_vars vars =
   let table = H.create (Array.length vars) in
