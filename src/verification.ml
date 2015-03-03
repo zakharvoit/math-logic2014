@@ -23,9 +23,18 @@ exception AxiomFound of int
 exception AssumptionFound of int
 exception ModusPonensFound of int * int
 exception NotFound
-
 let matches a b =
   let context = H.create 16 in
+  let term_context = H.create 16 in
+
+  let term_var_matches a b =
+    if H.mem term_context b then
+      H.find term_context b = a
+    else begin
+        H.add term_context b a;
+        true
+      end
+  in
 
   let var_matches a b =
     if H.mem context b then
@@ -36,12 +45,31 @@ let matches a b =
         end
   in
 
+  let rec term_matches a b = match (a, b) with
+    | (Plus (a1, a2), Plus (b1, b2))
+    | (Mul (a1, a2), Mul (b1, b2))
+      -> term_matches a1 b1 && term_matches a2 b2
+    | (Var a', b')
+      -> term_var_matches a' b'
+    | (Succ a', Succ b')
+      -> term_matches a' b'
+    | (Zero, Zero)
+      -> true
+    | (_, _)
+      -> false
+  in
+      
   let rec matches' a b = match (a, b) with
     | (Impl (a1, a2), Impl (b1, b2))
     | (Or (a1, a2), Or (b1, b2))
     | (And (a1, a2), And (b1, b2)) -> matches' a1 b1 && matches' a2 b2
     | (Not a', Not b')             -> matches' a' b'
     | (a', PVar name)              -> var_matches a' name
+    | (Forall (x, a'), Forall (y, b'))
+    | (Exists (x, a'), Exists (y, b')) when x = y
+      -> matches' a' b'
+    | (Predicate (p, a'), Predicate (q, b')) when p = q
+      -> List.fold_left (&&) true (List.map2 term_matches a' b')
     | (_, _)                       -> false
   in
 
@@ -152,6 +180,10 @@ let verify assumpts proof =
                                  (fun i -> raise (AxiomFound i))
   in
 
+  let check_formal_axiom e = check_list formal_axioms
+                                        (matches e)
+                                        (fun i -> raise (AxiomFound (12 + i)))
+  in
   let check_predicate_axiom e =
     print_endline (string_of_expression e);
     match e with
@@ -202,6 +234,7 @@ let verify assumpts proof =
       try
         check_axiom e;
         check_predicate_axiom e;
+        check_formal_axiom e;
         check_assumption e;
         check_modus_ponens e;
       with
