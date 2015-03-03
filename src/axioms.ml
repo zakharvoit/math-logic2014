@@ -12,7 +12,7 @@ let classical_axioms = Array.map (Util.parse_string Parser.expr_line)
                         ; "!!A -> A"
                        |]
 
-(* let formal_axioms = Array.map (Util.parse_string Parser.expr_line)
+let formal_axioms = Array.map (Util.parse_string Parser.expr_line)
                               [| "a = b -> a' = b'"
                                ; "a = b -> a = c -> b = c"
                                ; "a' = b' -> a = b"
@@ -22,5 +22,3 @@ let classical_axioms = Array.map (Util.parse_string Parser.expr_line)
                                ; "a * 0 = 0"
                                ; "a * b' = a * b + a"
                               |]
-
- *)

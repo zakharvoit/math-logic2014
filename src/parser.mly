@@ -34,11 +34,12 @@ csexprs: expr                { [ $1 ] }
 expr_line: expr TEoln { $1 }
     ;
   
-term: TVar            { E.Var $1 }
-    | TZero           { E.Zero }
-    | term TQuote     { E.Succ $1 }
-    | term TPlus term { E.Plus ($1, $3) }
-    | term TMul term  { E.Mul ($1, $3) }
+term: TOpenPar term TClosePar { $2 }
+    | TVar                    { E.Var $1 }
+    | TZero                   { E.Zero }
+    | term TQuote             { E.Succ $1 }
+    | term TPlus term         { E.Plus ($1, $3) }
+    | term TMul term          { E.Mul ($1, $3) }
     ;
 
 expr: TOpenPar expr TClosePar     { $2 }
