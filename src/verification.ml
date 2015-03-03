@@ -47,6 +47,92 @@ let matches a b =
 
   matches' a b
 
+let rec substitute_term x s = function
+  | Plus (a, b) -> Plus (substitute_term x s a, substitute_term x s b)
+  | Mul (a, b)  -> Mul (substitute_term x s a, substitute_term x s b)
+  | Succ a -> Succ (substitute_term x s a)
+  | Zero  -> Zero
+  | Var y -> if y = x
+             then Var x
+             else Var y
+
+let rec substitute x s = function
+  | Forall (v, e) ->
+     if x <> v
+     then Forall (v, (substitute x s e))
+     else Forall (v, e)
+  | Exists (v, e) ->
+     if x <> v
+     then Exists (v, (substitute x s e))
+     else Exists (v, e)
+  | PVar v ->
+     if x = v
+     then PVar x
+     else PVar v
+  | Predicate (p, args) ->
+     Predicate (p, List.map (substitute_term x s) args)
+  | Impl (a, b) -> Impl (substitute x s a, substitute x s b)
+  | Or (a, b) -> Or (substitute x s a, substitute x s b)
+  | And (a, b) -> And (substitute x s a, substitute x s b)
+  | Not a -> Not (substitute x s a)
+
+(* Is x from a always substituted in b by the same subexpression? *)
+let substituted x a b =
+  let substitution = ref Zero in
+  let found = ref false in
+
+  let rec substituted_term a b =
+    match (a, b) with
+    | (Var y, b') when y = x
+      -> if !found
+         then !substitution = b'
+         else begin
+             found := true;
+             substitution := b';
+             true
+           end
+    | (Var y, Var z)
+      -> y = z
+    | (Plus (a1, a2), Plus (b1, b2))
+    | (Mul (a1, a2), Plus (b1, b2))
+      -> substituted_term a1 b1 && substituted_term b1 b2
+    | (Succ a', Succ b')
+      -> substituted_term a' b'
+    | (Zero, Zero)
+      -> true
+    | _
+      -> false
+  in
+
+  let all_substituted a b =
+    List.length a = List.length b
+    && List.fold_left (&&) true
+                      (List.map2 substituted_term a b)
+  in
+
+  let rec substituted' a b =
+    match (a, b) with
+    | (Impl (a1, a2), Impl (b1, b2))
+    | (Or (a1, a2), Or (b1, b2))
+    | (And (a1, a2), And (b1, b2))
+      -> (substituted' a1 b1) && (substituted' a2 b2)
+    | (Forall (y, a'), Forall (z, b'))
+    | (Exists (y, a'), Exists (z, b')) when (y <> x) && (y <> z)
+      -> substituted' a' b'
+    | (Not a', Not b')
+      -> substituted' a' b'
+    | (Forall (y, a'), _)
+    | (Exists (y, a'), _) when y = x
+      -> true
+    | (PVar a', PVar b')
+      -> a' = b'
+    | (Predicate (ap, a'), Predicate (bp, b'))
+      -> all_substituted a' b'
+    | _
+      -> false
+  in
+  substituted' a b
+            
 let verify assumpts proof =
   let right = H.create 1024 in
   let answer = H.create 1024 in
@@ -64,6 +150,16 @@ let verify assumpts proof =
   let check_axiom e = check_list classical_axioms
                                  (matches e)
                                  (fun i -> raise (AxiomFound i))
+  in
+
+  let check_predicate_axiom e =
+    print_endline (string_of_expression e);
+    match e with
+    | Impl (Forall (x, a), b) when substituted x a b
+      -> raise (AxiomFound 10)
+    | Impl (b, Exists (x, a)) when substituted x a b
+      -> raise (AxiomFound 11)
+    | _ -> ()
   in
 
   let check_assumption e = check_list assumpts
@@ -105,6 +201,7 @@ let verify assumpts proof =
     begin
       try
         check_axiom e;
+        check_predicate_axiom e;
         check_assumption e;
         check_modus_ponens e;
       with
