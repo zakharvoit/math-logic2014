@@ -42,17 +42,19 @@ term: TOpenPar term TClosePar { $2 }
     | term TMul term          { E.Mul ($1, $3) }
     ;
 
-expr: TOpenPar expr TClosePar     { $2 }
-    | TNot expr                   { E.Not $2 }
-    | expr TAnd expr              { E.And ($1, $3) }
+expr: expr TAnd expr              { E.And ($1, $3) }
     | expr TOr expr               { E.Or ($1, $3) }
     | expr TImpl expr             { E.Impl ($1, $3) }
-    | term TEqual term            { E.Predicate ("=", [$1 ; $3])}
-    | TForall TVar expr           { E.Forall ($2, $3) }
-    | TExists TVar expr           { E.Exists ($2, $3) }
-    | TPredicate TOpenPar csterms TClosePar { E.Predicate ($1, List.rev $3) }
-    | TPredicate                  { E.PVar $1 }
+    | unary                       { $1 }
     ;
+
+unary: TOpenPar expr TClosePar              { $2 }
+    | TNot unary                            { E.Not $2 }
+    | TPredicate TOpenPar csterms TClosePar { E.Predicate ($1, List.rev $3) }
+    | TPredicate                            { E.PVar $1 }
+    | TForall TVar unary                    { E.Forall ($2, $3) }
+    | term TEqual term                      { E.Predicate ("=", [$1 ; $3])}
+    | TExists TVar unary                    { E.Exists ($2, $3) }
 
 csterms: term             { [$1] }
     | csterms TComma term { $3 :: $1 }
