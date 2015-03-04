@@ -30,7 +30,7 @@ let deduce proof assumpts a =
        let deduce_by_assumpt = get_standard_proof "deduce_assumpt" naming in
        new_proof := deduce_by_assumpt
                       @ !new_proof
-   | V.ByModusPonens (c_pos, d_pos)  ->
+    | V.ByModusPonens (c_pos, d_pos)  ->
        let c = proof.(c_pos) in
        let d = proof.(d_pos) in
        let naming = function
@@ -43,6 +43,8 @@ let deduce proof assumpts a =
        let deduce_by_mp = get_standard_proof "deduce_by_mp" naming in
        new_proof := deduce_by_mp
                       @ !new_proof
+    | V.ByRule1 _ -> failwith "Not implemented" 
+    | V.ByRule2 _ -> failwith "Not implemented"
     | V.NotProved                  -> raise (NotProved i)
   done;
   Array.of_list (List.rev !new_proof)

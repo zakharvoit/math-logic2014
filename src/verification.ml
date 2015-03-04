@@ -6,6 +6,8 @@ module H = Hashtbl
 
 type annotation = ByAxiom of int
                 | ByModusPonens of int * int
+                | ByRule1 of int
+                | ByRule2 of int
                 | ByAssumption of int
                 | NotProved
 
@@ -18,11 +20,18 @@ let string_of_annotation =
     | ByModusPonens (a, b) -> "M.P. "
                               ^ string_of_int (a + 1) ^ ", "
                               ^ string_of_int (b + 1)
+    | ByRule1 a            -> "Rule 1"
+                                ^ string_of_int a
+    | ByRule2 a            -> "Rule 2"
+                                ^ string_of_int a
  
 exception AxiomFound of int
 exception AssumptionFound of int
+exception Rule1Found of int
+exception Rule2Found of int
 exception ModusPonensFound of int * int
 exception NotFound
+
 let matches a b =
   let context = H.create 16 in
   let term_context = H.create 16 in
@@ -214,6 +223,18 @@ let verify assumpts proof =
       raise (ModusPonensFound (a, b))
   in
 
+  let check_predicate_rule1 = function
+    | Impl (a, Forall (x, b)) when H.mem proved (Impl (a, b))
+      -> raise (Rule1Found (H.find proved (Impl (a, b))))
+    | _ -> ()
+  in
+
+  let check_predicate_rule2 = function
+    | Impl (Exists (x, a), b) when H.mem proved (Impl (a, b))
+      -> raise (Rule2Found (H.find proved (Impl (a, b))))
+    | _ -> ()
+  in
+
   let update_modus_ponens e pos =
     if H.mem right e
     then begin
@@ -246,10 +267,15 @@ let verify assumpts proof =
         check_induction e;
         check_assumption e;
         check_modus_ponens e;
+        check_predicate_rule1 e;
+        check_predicate_rule2 e;
       with
       | AxiomFound a            -> annotations.(i) <- ByAxiom a
       | AssumptionFound a       -> annotations.(i) <- ByAssumption a
       | ModusPonensFound (a, b) -> annotations.(i) <- ByModusPonens (a, b)
+      | Rule1Found a            -> annotations.(i) <- ByRule1 a
+      | Rule2Found a            -> annotations.(i) <- ByRule2 a
+      | AssumptionFound a       -> annotations.(i) <- ByAssumption a
       | NotFound                -> annotations.(i) <- NotProved
     end;
     update_modus_ponens e i
