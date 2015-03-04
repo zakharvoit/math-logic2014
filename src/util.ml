@@ -5,7 +5,44 @@ let parse_string parser = parser Lexer.token
                                |> Lexing.from_string
                                |> (fun s -> s ^ "\n")
 
+let trim s = 
+  let is_space = function
+    | ' ' | '\012' | '\n' | '\r' | '\t' -> true
+    | _ -> false in
+  let len = String.length s in
+  let i = ref 0 in
+  while !i < len && is_space (String.get s !i) do
+    incr i
+  done;
+  let j = ref (len - 1) in
+  while !j >= !i && is_space (String.get s !j) do
+    decr j
+  done;
+  if !i = 0 && !j = len - 1 then
+    s
+  else if !j >= !i then
+    String.sub s !i (!j - !i + 1)
+  else
+    ""
+;;
 
+let f_read_lines channel =
+ let lines_list   = ref [] in
+  try
+    while true do
+      lines_list := trim (input_line channel) :: !lines_list
+    done;
+    [| |]
+  with End_of_file -> Array.of_list (List.rev !lines_list)
+  
+let read_lines _ = f_read_lines stdin
+
+let get_standard_proof name get_var =
+  let name_f = open_in ("res/proofs/" ^ name) in
+  let lines = f_read_lines name_f in
+  close_in name_f;
+  let proof = Array.map (parse_string Parser.expr_line) lines in
+  List.rev (Array.to_list (Array.map (Arithmetic.substitute get_var) proof))
 
 let rec length_aux len = function
     [] -> len
@@ -421,34 +458,3 @@ let sort_uniq cmp l =
   let len = length l in
   if len < 2 then l else sort len l
 ;;
-let trim s = 
-  let is_space = function
-    | ' ' | '\012' | '\n' | '\r' | '\t' -> true
-    | _ -> false in
-  let len = String.length s in
-  let i = ref 0 in
-  while !i < len && is_space (String.get s !i) do
-    incr i
-  done;
-  let j = ref (len - 1) in
-  while !j >= !i && is_space (String.get s !j) do
-    decr j
-  done;
-  if !i = 0 && !j = len - 1 then
-    s
-  else if !j >= !i then
-    String.sub s !i (!j - !i + 1)
-  else
-    ""
-;;
-
-let f_read_lines channel =
- let lines_list   = ref [] in
-  try
-    while true do
-      lines_list := trim (input_line channel) :: !lines_list
-    done;
-    [| |]
-  with End_of_file -> Array.of_list (List.rev !lines_list)
-  
-let read_lines _ = f_read_lines stdin

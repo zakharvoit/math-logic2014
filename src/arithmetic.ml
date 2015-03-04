@@ -36,3 +36,14 @@ let rec string_of_expression =
                         then string_of_term (List.hd l) ^ " = " ^ string_of_term (List.hd (List.tl l))
                         else p ^ "(" ^ comma_separate (List.map string_of_term l) ^ ")"
   | PVar s           -> s
+
+let rec substitute get_var = function
+  | PVar name   -> get_var name
+  | Not a       -> Not (substitute get_var a)
+  | And (a, b)  -> And (substitute get_var a,
+                        substitute get_var b)
+  | Or (a, b)   -> Or (substitute get_var a,
+                        substitute get_var b)
+  | Impl (a, b) -> Impl (substitute get_var a,
+                        substitute get_var b)
+  | other       -> other
