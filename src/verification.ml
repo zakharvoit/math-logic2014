@@ -81,7 +81,7 @@ let rec substitute_term x s = function
   | Succ a -> Succ (substitute_term x s a)
   | Zero  -> Zero
   | Var y -> if y = x
-             then Var x
+             then s
              else Var y
 
 let rec substitute x s = function
@@ -93,16 +93,13 @@ let rec substitute x s = function
      if x <> v
      then Exists (v, (substitute x s e))
      else Exists (v, e)
-  | PVar v ->
-     if x = v
-     then PVar x
-     else PVar v
   | Predicate (p, args) ->
      Predicate (p, List.map (substitute_term x s) args)
   | Impl (a, b) -> Impl (substitute x s a, substitute x s b)
   | Or (a, b) -> Or (substitute x s a, substitute x s b)
   | And (a, b) -> And (substitute x s a, substitute x s b)
   | Not a -> Not (substitute x s a)
+  | other -> other
 
 (* Is x from a always substituted in b by the same subexpression? *)
 let substituted x a b =
@@ -184,6 +181,17 @@ let verify assumpts proof =
                                         (matches e)
                                         (fun i -> raise (AxiomFound (12 + i)))
   in
+
+  let check_induction e =
+    match e with
+    | Impl (And (a, Forall (x, Impl (b, c))), d) when b = d
+                                                      && substitute x Zero d = a
+                                                      && substitute x (Succ (Var x)) d = c
+      -> raise (AxiomFound 20)
+    | _
+      -> ()
+  in
+
   let check_predicate_axiom e =
     print_endline (string_of_expression e);
     match e with
@@ -235,6 +243,7 @@ let verify assumpts proof =
         check_axiom e;
         check_predicate_axiom e;
         check_formal_axiom e;
+        check_induction e;
         check_assumption e;
         check_modus_ponens e;
       with
