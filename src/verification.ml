@@ -353,7 +353,19 @@ let verify assumpts proof =
     | _ -> ()
   in
 
-  let check_if_may_be_rule i e = ()
+  let check_if_may_be_rule i e =
+    let check_predicate_rule1' = function
+      | Impl (a, Forall (x, b)) when H.mem proved (Impl (a, b))
+        -> raise (FreeIn (i, x, a))
+      | _ -> ()
+    in
+
+    let check_predicate_rule2' = function
+      | Impl (Exists (x, a), b) when H.mem proved (Impl (a, b))
+        -> raise (FreeIn (i, x, b))
+      | _ -> ()
+    in
+    check_predicate_rule1' e; check_predicate_rule2' e
   in
 
   let add i =
