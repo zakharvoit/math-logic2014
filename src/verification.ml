@@ -1,7 +1,6 @@
 open Util
 open Axioms
 open Arithmetic
-open Printf
 
 module H = Hashtbl
 
@@ -10,12 +9,10 @@ type annotation = ByAxiom of int
                 | ByRule1 of int
                 | ByRule2 of int
                 | ByAssumption of int
-                | NotProved
 
 let string_of_annotation =
   (fun s -> "(" ^ s ^ ")")
   |> function
-    | NotProved            -> "Не доказано"
     | ByAxiom a            -> "Сх. акс. " ^ string_of_int (a + 1)
     | ByAssumption a       -> "Предположение " ^ string_of_int (a + 1)
     | ByModusPonens (a, b) -> "M.P. "
@@ -31,8 +28,10 @@ exception AssumptionFound of int
 exception Rule1Found of int
 exception Rule2Found of int
 exception ModusPonensFound of int * int
-exception NotFound
 
+exception NotFound of int
+exception NotFree of int * term * expression * string
+exception FreeIn of int * string * expression
 
 let free_vars_in_expr =
   let rec free_vars_in_term bound free = function
@@ -219,7 +218,8 @@ let get_substitution x a b =
     | (And (a1, a2), And (b1, b2))
       -> (substituted' a1 b1) && (substituted' a2 b2)
     | (Forall (y, a'), Forall (z, b'))
-    | (Exists (y, a'), Exists (z, b')) when (y <> x) && (y <> z)
+    | (Exists (y, a'), Exists (z, b')) when (y <> x)
+                                            && (y = z)
       -> substituted' a' b'
     | (Not a', Not b')
       -> substituted' a' b'
@@ -247,7 +247,7 @@ let verify assumpts proof =
   let right = H.create 1024 in
   let answer = H.create 1024 in
   let proved = H.create 1024 in
-  let annotations = Array.make (Array.length proof) NotProved in
+  let annotations = Array.make (Array.length proof) (ByAxiom 0) in
   
   let check_list l p f =
     for i = 0 to Array.length l - 1 do
@@ -306,14 +306,14 @@ let verify assumpts proof =
 
   let check_predicate_rule1 = function
     | Impl (a, Forall (x, b)) when not (List.mem x (free_vars_in_expr a))
-                                       && H.mem proved (Impl (a, b))
+                                   && H.mem proved (Impl (a, b))
       -> raise (Rule1Found (H.find proved (Impl (a, b))))
     | _ -> ()
   in
 
   let check_predicate_rule2 = function
     | Impl (Exists (x, a), b) when not (List.mem x (free_vars_in_expr b))
-                                       && H.mem proved (Impl (a, b))
+                                   && H.mem proved (Impl (a, b))
       -> raise (Rule2Found (H.find proved (Impl (a, b))))
     | _ -> ()
   in
@@ -340,6 +340,22 @@ let verify assumpts proof =
     H.replace proved e pos
   in
 
+  let check_if_may_be_axiom i =
+    let check_substitution x a b = 
+      match get_substitution x a b with
+      | Some s -> raise (NotFree (i, s, a, x))
+      | None -> failwith "Expected substitution"
+    in function
+    | Impl (Forall (x, a), b) when substituted x a b
+      -> check_substitution x a b
+    | Impl (b, Exists (x, a)) when substituted x a b
+      -> check_substitution x a b
+    | _ -> ()
+  in
+
+  let check_if_may_be_rule i e = ()
+  in
+
   let add i =
     let e = proof.(i) in
     begin
@@ -352,15 +368,19 @@ let verify assumpts proof =
         check_modus_ponens e;
         check_predicate_rule1 e;
         check_predicate_rule2 e;
+
+        check_if_may_be_axiom i e;
+        check_if_may_be_rule i e;
+        raise (NotFound i)
       with
       | AxiomFound a            -> annotations.(i) <- ByAxiom a
       | AssumptionFound a       -> annotations.(i) <- ByAssumption a
       | ModusPonensFound (a, b) -> annotations.(i) <- ByModusPonens (a, b)
       | Rule1Found a            -> annotations.(i) <- ByRule1 a
       | Rule2Found a            -> annotations.(i) <- ByRule2 a
-      | NotFound                -> annotations.(i) <- NotProved
+      (* Don't catch other exceptions, delegate its to the main function. *)
     end;
-    update_modus_ponens e i
+    update_modus_ponens e i;
   in
 
   for i = 0 to Array.length proof - 1 do

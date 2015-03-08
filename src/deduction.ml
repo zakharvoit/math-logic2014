@@ -6,8 +6,7 @@ module V = Verification
 exception NotProved of int
 exception UnknownVariable of string
 
-let deduce proof assumpts a =
-  let annotations = V.verify assumpts proof in
+let deduce proof annotations assumpts a =
   let new_proof = ref [] in
   for i = 0 to Array.length proof - 1 do
     let e = proof.(i) in
@@ -73,6 +72,5 @@ let deduce proof assumpts a =
        let deduce_by_rule2 = get_standard_proof "deduce_rule2" naming in
        new_proof := deduce_by_rule2
                       @ !new_proof
-    | V.NotProved                  -> raise (NotProved i)
   done;
   Array.of_list (List.rev !new_proof)
