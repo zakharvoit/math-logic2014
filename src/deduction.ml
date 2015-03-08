@@ -43,8 +43,36 @@ let deduce proof assumpts a =
        let deduce_by_mp = get_standard_proof "deduce_by_mp" naming in
        new_proof := deduce_by_mp
                       @ !new_proof
-    | V.ByRule1 _ -> failwith "Not implemented" 
-    | V.ByRule2 _ -> failwith "Not implemented"
+    | V.ByRule1 prev_pos ->
+       let prev = proof.(prev_pos) in
+       let (b, c) = match prev with
+         | Impl (b, c) -> (b, c)
+         | _ -> failwith ("Unexpected " ^ string_of_expression prev)
+       in
+       let naming = function
+         | "A" -> a
+         | "B" -> b
+         | "C" -> c
+         | name -> raise (UnknownVariable name)
+       in
+       let deduce_by_rule1 = get_standard_proof "deduce_rule1" naming in
+       new_proof := deduce_by_rule1
+                      @ !new_proof
+    | V.ByRule2 prev_pos ->
+       let prev = proof.(prev_pos) in
+       let (b, c) = match prev with
+         | Impl (b, c) -> (b, c)
+         | _ -> failwith ("Unexpected " ^ string_of_expression prev)
+       in
+       let naming = function
+         | "A" -> a
+         | "B" -> b
+         | "C" -> c
+         | name -> raise (UnknownVariable name)
+       in
+       let deduce_by_rule2 = get_standard_proof "deduce_rule2" naming in
+       new_proof := deduce_by_rule2
+                      @ !new_proof
     | V.NotProved                  -> raise (NotProved i)
   done;
   Array.of_list (List.rev !new_proof)

@@ -202,7 +202,6 @@ let verify assumpts proof =
   in
 
   let check_predicate_axiom e =
-    print_endline (string_of_expression e);
     match e with
     | Impl (Forall (x, a), b) when substituted x a b
       -> raise (AxiomFound 10)

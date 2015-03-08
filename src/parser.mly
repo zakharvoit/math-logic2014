@@ -24,10 +24,11 @@
 %type <Arithmetic.expression> expr_line
 %%
 
-assumptions_line: csexprs TTourniquet expr TEoln { ($1, $3) }
+  assumptions_line: TTourniquet expr TEoln { ([], $2) }
+     | csexprs TTourniquet expr TEoln { ($1, $3) }
     ;
 
-csexprs: expr                { [ $1 ] }
+csexprs: expr                { [$1] }
        | csexprs TComma expr { $3 :: $1 }
        ;
 

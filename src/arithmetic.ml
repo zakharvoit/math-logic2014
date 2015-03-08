@@ -46,4 +46,6 @@ let rec substitute get_var = function
                         substitute get_var b)
   | Impl (a, b) -> Impl (substitute get_var a,
                         substitute get_var b)
+  | Forall (x, a) -> Forall (x, substitute get_var a)
+  | Exists (x, a) -> Exists (x, substitute get_var a)
   | other       -> other
