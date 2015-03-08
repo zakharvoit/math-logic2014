@@ -274,7 +274,6 @@ let verify assumpts proof =
       | ModusPonensFound (a, b) -> annotations.(i) <- ByModusPonens (a, b)
       | Rule1Found a            -> annotations.(i) <- ByRule1 a
       | Rule2Found a            -> annotations.(i) <- ByRule2 a
-      | AssumptionFound a       -> annotations.(i) <- ByAssumption a
       | NotFound                -> annotations.(i) <- NotProved
     end;
     update_modus_ponens e i
