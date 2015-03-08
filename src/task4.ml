@@ -22,7 +22,7 @@ let _ =
   if List.length assumpts > 0 then
     print_string (string_of_expression (List.hd assumpts) ^ " -> ");
   print_endline (string_of_expression goal);
-  let err_message i = "Ввод некорректен начиная с формулы номер " ^ string_of_int i in
+  let err_message i = "Ввод некорректен начиная с формулы номер " ^ string_of_int (i + 1) in
   try
     let verified = verify (Array.of_list assumpts) exprs in
     if List.length assumpts = 0 then
@@ -47,5 +47,11 @@ let _ =
                       ^ s
                       ^ " входит свободно в формулу "
                      ^ string_of_expression e)
-
-    
+  | FreeInAssumption (i, t, s, e)
+    -> print_endline (err_message i
+                      ^ ": используется "
+                      ^ t
+                      ^ "с квантором по переменной "
+                      ^ s
+                      ^ ", входящей свободно в допущение "
+                      ^ (string_of_expression e))

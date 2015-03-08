@@ -6,7 +6,10 @@ module V = Verification
 exception NotProved of int
 exception UnknownVariable of string
 
+exception FreeInAssumption of int * string * string * expression
+
 let deduce proof annotations assumpts a =
+  let free = V.free_vars_in_expr a in
   let new_proof = ref [] in
   for i = 0 to Array.length proof - 1 do
     let e = proof.(i) in
@@ -48,6 +51,8 @@ let deduce proof annotations assumpts a =
          | Impl (a, Forall (x, b)) -> x
          | _ -> failwith "e should be deduced by rule 1"
        in
+       if List.mem var free then
+         raise (FreeInAssumption (i, " правило ", var, a));
        let (b, c) = match prev with
          | Impl (b, c) -> (b, c)
          | _ -> failwith ("Unexpected " ^ string_of_expression prev)
@@ -68,6 +73,8 @@ let deduce proof annotations assumpts a =
          | Impl (Exists (x, a), b) -> x
          | _ -> failwith "e should be deduced by rule 2"
        in
+       if List.mem var free then
+         raise (FreeInAssumption (i, " правило ", var, a));
        let (b, c) = match prev with
          | Impl (b, c) -> (b, c)
          | _ -> failwith ("Unexpected " ^ string_of_expression prev)
