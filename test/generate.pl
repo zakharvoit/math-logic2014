@@ -10,8 +10,8 @@ my $task = shift;
 print colored ['yellow'], "Generating answers for $task\n";
 while (glob "./test-files/$task/*.in") {
 	my $out = $_;
-	$out =~ s/in/out/;
-	if (/disable|fail/) {
+	$out =~ s/in$/out/;
+	if (/disable/) {
 	    print colored ['yellow'], "Ignoring $_\n";
 	    next;
 	}
