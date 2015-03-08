@@ -13,7 +13,7 @@ let deduce proof annotations assumpts a =
     match annotations.(i) with
     | _ when e = a                 ->
        let naming = function
-         | "A" -> a
+         | "A" -> Expr a
          | name -> raise (UnknownVariable name)
        in
        let a_is_a = get_standard_proof "a_is_a" naming in
@@ -22,8 +22,8 @@ let deduce proof annotations assumpts a =
     | V.ByAxiom _
     | V.ByAssumption _             ->
        let naming = function
-         | "A" -> a
-         | "B" -> e
+         | "A" -> Expr a
+         | "B" -> Expr e
          | name -> raise (UnknownVariable name)
        in
        let deduce_by_assumpt = get_standard_proof "deduce_assumpt" naming in
@@ -33,10 +33,10 @@ let deduce proof annotations assumpts a =
        let c = proof.(c_pos) in
        let d = proof.(d_pos) in
        let naming = function
-         | "A" -> a
-         | "B" -> e
-         | "C" -> c
-         | "D" -> d
+         | "A" -> Expr a
+         | "B" -> Expr e
+         | "C" -> Expr c
+         | "D" -> Expr d
          | name -> raise (UnknownVariable name)
        in
        let deduce_by_mp = get_standard_proof "deduce_by_mp" naming in
@@ -44,14 +44,19 @@ let deduce proof annotations assumpts a =
                       @ !new_proof
     | V.ByRule1 prev_pos ->
        let prev = proof.(prev_pos) in
+       let var = match e with
+         | Impl (a, Forall (x, b)) -> x
+         | _ -> failwith "e should be deduced by rule 1"
+       in
        let (b, c) = match prev with
          | Impl (b, c) -> (b, c)
          | _ -> failwith ("Unexpected " ^ string_of_expression prev)
        in
        let naming = function
-         | "A" -> a
-         | "B" -> b
-         | "C" -> c
+         | "A" -> Expr a
+         | "B" -> Expr b
+         | "C" -> Expr c
+         | "x" -> Variable var
          | name -> raise (UnknownVariable name)
        in
        let deduce_by_rule1 = get_standard_proof "deduce_rule1" naming in
@@ -59,14 +64,19 @@ let deduce proof annotations assumpts a =
                       @ !new_proof
     | V.ByRule2 prev_pos ->
        let prev = proof.(prev_pos) in
+       let var = match e with
+         | Impl (Exists (x, a), b) -> x
+         | _ -> failwith "e should be deduced by rule 2"
+       in
        let (b, c) = match prev with
          | Impl (b, c) -> (b, c)
          | _ -> failwith ("Unexpected " ^ string_of_expression prev)
        in
        let naming = function
-         | "A" -> a
-         | "B" -> b
-         | "C" -> c
+         | "A" -> Expr a
+         | "B" -> Expr b
+         | "C" -> Expr c
+         | "x" -> Variable var
          | name -> raise (UnknownVariable name)
        in
        let deduce_by_rule2 = get_standard_proof "deduce_rule2" naming in

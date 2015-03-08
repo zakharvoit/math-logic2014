@@ -13,6 +13,16 @@ type expression = Impl of expression * expression
                 | Predicate of string * (term list)
                 | PVar of string
 
+type var_or_expr = Variable of string | Expr of expression
+
+let to_variable = function
+  | Variable a -> a
+  | _ -> failwith "Term expected"
+
+let to_expr = function
+  | Expr a -> a
+  | _ -> failwith "Term expected"
+
 let rec string_of_term = function
   | Zero        -> "0"
   | Var s       -> s
@@ -37,8 +47,18 @@ let rec string_of_expression =
                         else p ^ "(" ^ comma_separate (List.map string_of_term l) ^ ")"
   | PVar s           -> s
 
+
+let rec substitute_in_term get_var = function
+  | Var name -> Var (to_variable (get_var name))
+  | Plus (a, b) -> Plus (substitute_in_term get_var a,
+                        substitute_in_term get_var b)
+  | Mul (a, b) -> Mul (substitute_in_term get_var a,
+                       substitute_in_term get_var b)
+  | Succ a -> Succ (substitute_in_term get_var a)
+  | Zero -> Zero
+
 let rec substitute get_var = function
-  | PVar name   -> get_var name
+  | PVar name   -> to_expr (get_var name)
   | Not a       -> Not (substitute get_var a)
   | And (a, b)  -> And (substitute get_var a,
                         substitute get_var b)
@@ -46,6 +66,6 @@ let rec substitute get_var = function
                         substitute get_var b)
   | Impl (a, b) -> Impl (substitute get_var a,
                         substitute get_var b)
-  | Forall (x, a) -> Forall (x, substitute get_var a)
-  | Exists (x, a) -> Exists (x, substitute get_var a)
-  | other       -> other
+  | Forall (x, a) -> Forall (to_variable (get_var x), substitute get_var a)
+  | Exists (x, a) -> Exists (to_variable (get_var x), substitute get_var a)
+  | Predicate (s, args) -> Predicate (s, List.map (substitute_in_term get_var) args)
