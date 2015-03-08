@@ -16,7 +16,7 @@ build: $(NATIVES)
 
 generate: $(GENERATE_TASKS)
 
-test: $(TEST_TASKS)
+test: all $(TEST_TASKS)
 
 %.test: %.native
 	./test/test.pl $(@:%.test=%)
