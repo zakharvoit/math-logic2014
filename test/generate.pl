@@ -11,7 +11,7 @@ print colored ['yellow'], "Generating answers for $task\n";
 while (glob "./test-files/$task/*.in") {
 	my $out = $_;
 	$out =~ s/in/out/;
-	if (/disable/) {
+	if (/disable|fail/) {
 	    print colored ['yellow'], "Ignoring $_\n";
 	    next;
 	}
