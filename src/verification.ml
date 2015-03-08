@@ -1,6 +1,7 @@
 open Util
 open Axioms
 open Arithmetic
+open Printf
 
 module H = Hashtbl
 
@@ -31,6 +32,45 @@ exception Rule1Found of int
 exception Rule2Found of int
 exception ModusPonensFound of int * int
 exception NotFound
+
+let free_vars = 
+  let rec free_vars_in_term bound free = function
+    | Plus (a, b)
+    | Mul (a, b) -> free_vars_in_term bound (free_vars_in_term bound free a) b
+    | Succ a -> free_vars_in_term bound free a
+    | Zero -> free
+    | Var a -> if List.mem a bound
+               then free
+               else a :: free
+   in free_vars_in_term [] []
+
+(* Can be x substituted with a in b? *)
+let free_for_substitution a x b =
+  let free = free_vars a in
+
+  let rec free_in_term bound = function
+    | Plus (a, b)
+    | Mul (a, b) -> free_in_term bound a && free_in_term bound b
+    | Succ a -> free_in_term bound a
+    | Zero -> true
+    | Var a when a = x -> List.fold_left
+                            (&&)
+                            true
+                            (List.map (fun x -> not (List.mem x bound)) free)
+    | Var a -> true
+  in
+
+  let rec free_for_substitution' bound = function
+    | And (a, b)
+    | Or (a, b)
+    | Impl (a, b) -> free_for_substitution' bound a && free_for_substitution' bound a
+    | Not a -> free_for_substitution' bound a
+    | Forall (x, e)
+    | Exists (x, e) -> free_for_substitution' (x :: bound) e
+    | PVar _ -> true
+    | Predicate (s, args) -> List.fold_left (&&) true (List.map (free_in_term bound) args)
+
+  in free_for_substitution' [] b
 
 let matches a b =
   let context = H.create 16 in
@@ -111,20 +151,19 @@ let rec substitute x s = function
   | other -> other
 
 (* Is x from a always substituted in b by the same subexpression? *)
-let substituted x a b =
-  let substitution = ref Zero in
-  let found = ref false in
+let get_substitution x a b =
+  let substitution = ref None in
 
   let rec substituted_term a b =
     match (a, b) with
     | (Var y, b') when y = x
-      -> if !found
-         then !substitution = b'
-         else begin
-             found := true;
-             substitution := b';
+      -> begin match !substitution with
+         | Some s -> s = b'
+         | None -> begin
+             substitution := Some b';
              true
            end
+         end
     | (Var y, Var z)
       -> y = z
     | (Plus (a1, a2), Plus (b1, b2))
@@ -165,7 +204,15 @@ let substituted x a b =
     | _
       -> false
   in
-  substituted' a b
+  if substituted' a b then
+    !substitution
+  else
+    None
+
+let substituted x a b =
+  match get_substitution x a b with
+  | Some _ -> true
+  | None -> false
             
 let verify assumpts proof =
   let right = H.create 1024 in
@@ -202,10 +249,16 @@ let verify assumpts proof =
   in
 
   let check_predicate_axiom e =
+    let check_for_free x a b =
+      match get_substitution x a b with
+      | Some s -> free_for_substitution s x a
+      | None -> false
+    in
+
     match e with
-    | Impl (Forall (x, a), b) when substituted x a b
+    | Impl (Forall (x, a), b) when check_for_free x a b
       -> raise (AxiomFound 10)
-    | Impl (b, Exists (x, a)) when substituted x a b
+    | Impl (b, Exists (x, a)) when check_for_free x a b
       -> raise (AxiomFound 11)
     | _ -> ()
   in
