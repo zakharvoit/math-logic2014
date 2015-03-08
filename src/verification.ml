@@ -33,6 +33,35 @@ exception Rule2Found of int
 exception ModusPonensFound of int * int
 exception NotFound
 
+
+let free_vars_in_expr =
+  let rec free_vars_in_term bound free = function
+    | Plus (a, b)
+    | Mul (a, b) -> free_vars_in_term bound (free_vars_in_term bound free a) b
+    | Succ a -> free_vars_in_term bound free a
+    | Zero -> free
+    | Var a -> if List.mem a bound
+               then free
+               else a :: free
+  in
+
+  let rec free_vars_in_all bound free = function
+    | [] -> free
+    | (x :: xs) -> free_vars_in_all bound (free_vars_in_term bound free x) xs
+  in
+
+  let rec free_vars' bound (free : string list) = function
+    | And (a, b)
+    | Or (a, b)
+    | Impl (a, b) -> free_vars' bound (free_vars' bound free a) b
+    | Not a -> free_vars' bound free a
+    | Forall (x, e)
+    | Exists (x, e) -> free_vars' (x :: bound) free e
+    | PVar _ -> free
+    | Predicate (s, args) -> free_vars_in_all bound free args
+
+  in free_vars' [] []
+
 let free_vars = 
   let rec free_vars_in_term bound free = function
     | Plus (a, b)
@@ -276,13 +305,15 @@ let verify assumpts proof =
   in
 
   let check_predicate_rule1 = function
-    | Impl (a, Forall (x, b)) when H.mem proved (Impl (a, b))
+    | Impl (a, Forall (x, b)) when not (List.mem x (free_vars_in_expr a))
+                                       && H.mem proved (Impl (a, b))
       -> raise (Rule1Found (H.find proved (Impl (a, b))))
     | _ -> ()
   in
 
   let check_predicate_rule2 = function
-    | Impl (Exists (x, a), b) when H.mem proved (Impl (a, b))
+    | Impl (Exists (x, a), b) when not (List.mem x (free_vars_in_expr b))
+                                       && H.mem proved (Impl (a, b))
       -> raise (Rule2Found (H.find proved (Impl (a, b))))
     | _ -> ()
   in
