@@ -22,8 +22,8 @@ let deduce proof annotations assumpts a =
        let a_is_a = get_standard_proof "a_is_a" naming in
        new_proof := a_is_a
                       @ !new_proof
-    | V.ByAxiom _
-    | V.ByAssumption _             ->
+    | V.ByAxiom num
+    | V.ByAssumption num             ->
        let naming = function
          | "A" -> Expr a
          | "B" -> Expr e

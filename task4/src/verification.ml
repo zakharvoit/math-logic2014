@@ -182,9 +182,9 @@ let rec substitute x s = function
 let get_substitution x a b =
   let substitution = ref None in
 
-  let rec substituted_term a b =
+  let rec substituted_term a b x_free =
     match (a, b) with
-    | (Var y, b') when y = x
+    | (Var y, b') when y = x && x_free
       -> begin match !substitution with
          | Some s -> s = b'
          | None -> begin
@@ -196,44 +196,44 @@ let get_substitution x a b =
       -> y = z
     | (Plus (a1, a2), Plus (b1, b2))
     | (Mul (a1, a2), Plus (b1, b2))
-      -> substituted_term a1 b1 && substituted_term b1 b2
+      -> substituted_term a1 b1 x_free && substituted_term b1 b2 x_free
     | (Succ a', Succ b')
-      -> substituted_term a' b'
+      -> substituted_term a' b' x_free
     | (Zero, Zero)
       -> true
     | _
       -> false
   in
 
-  let all_substituted a b =
+  let all_substituted a b x_free =
     List.length a = List.length b
     && List.fold_left (&&) true
-                      (List.map2 substituted_term a b)
+                      (List.map2 (fun x y -> substituted_term x y x_free) a b)
   in
 
-  let rec substituted' a b =
+  let rec substituted' a b x_free =
     match (a, b) with
     | (Impl (a1, a2), Impl (b1, b2))
     | (Or (a1, a2), Or (b1, b2))
     | (And (a1, a2), And (b1, b2))
-      -> (substituted' a1 b1) && (substituted' a2 b2)
+      -> (substituted' a1 b1 x_free) && (substituted' a2 b2 x_free)
     | (Forall (y, a'), Forall (z, b'))
-    | (Exists (y, a'), Exists (z, b')) when (y <> x)
+    | (Exists (y, a'), Exists (z, b')) when (not x_free || (y <> x))
                                             && (y = z)
-      -> substituted' a' b'
+      -> substituted' a' b' x_free
     | (Not a', Not b')
-      -> substituted' a' b'
-    | (Forall (y, a'), _)
-    | (Exists (y, a'), _) when y = x
-      -> true
+      -> substituted' a' b' x_free
+    | (Forall (y, a'), Forall (z, b'))
+    | (Exists (y, a'), Exists (z, b')) when (x_free && y = x && z = x)
+      -> substituted' a' b' false
     | (PVar a', PVar b')
       -> a' = b'
     | (Predicate (ap, a'), Predicate (bp, b'))
-      -> all_substituted a' b'
+      -> all_substituted a' b' x_free
     | _
       -> false
   in
-  if substituted' a b then
+  if substituted' a b true then
     match !substitution with
     | Some s -> Some s
     | None -> Some Zero
