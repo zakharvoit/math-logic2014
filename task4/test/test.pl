@@ -15,6 +15,10 @@ while (glob "./test-files/$task/*.in") {
 	    print colored ['yellow'], "Ignored $_\n";
 	    next;
 	}
+	my $should_fail = 0;
+	if (/fail/) {
+	    $should_fail = 1;
+	}
 	if (system("./$task.native <$_ >buffer.txt") != 0) {
 	    print colored ['red'], "Error on $_\n"
 	} elsif (system("cmp buffer.txt $out") != 0) {
@@ -22,7 +26,10 @@ while (glob "./test-files/$task/*.in") {
 	} else {
 		print colored ['green'], "OK $_\n";
 	}
-	system("grep -ir 'Некорректен' buffer.txt");
+	my $correct = system("grep -ir 'Некорректен' buffer.txt >/dev/null");
+	if ($should_fail != !$correct) {
+	    print colored ['red'], "Error on $_ (failed)";
+	}
 }
 
 `rm -f buffer.txt`
