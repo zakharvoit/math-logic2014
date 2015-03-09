@@ -234,7 +234,9 @@ let get_substitution x a b =
       -> false
   in
   if substituted' a b then
-    !substitution
+    match !substitution with
+    | Some s -> Some s
+    | None -> Some Zero
   else
     None
 
