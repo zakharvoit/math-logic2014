@@ -16,7 +16,7 @@ while (glob "./test-files/$task/*.in") {
 	    next;
 	}
 	my $should_fail = 0;
-	if (/fail/) {
+	if (/fail|incorrect/) {
 	    $should_fail = 1;
 	}
 	if (system("./$task.native <$_ >buffer.txt") != 0) {
@@ -28,7 +28,7 @@ while (glob "./test-files/$task/*.in") {
 	}
 	my $correct = system("grep -ir 'Некорректен' buffer.txt >/dev/null");
 	if ($should_fail != !$correct) {
-	    print colored ['red'], "Error on $_ (failed)";
+	    print colored ['red'], "Error on $_ (failed)\n";
 	}
 }
 
