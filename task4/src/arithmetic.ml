@@ -3,6 +3,7 @@ type term = Zero
           | Plus of term * term
           | Mul of term * term
           | Var of string
+          | Function of string * (term list)
 
 type expression = Impl of expression * expression
                 | Or of expression * expression
@@ -23,19 +24,20 @@ let to_expr = function
   | Expr a -> a
   | _ -> failwith "Term expected"
 
+let rec comma_separate = function
+    | []  -> ""
+    | [a] -> a
+    | x :: xs -> x ^ "," ^ comma_separate xs
+
 let rec string_of_term = function
   | Zero        -> "0"
   | Var s       -> s
   | Succ a      -> string_of_term a ^ "'"
   | Plus (a, b) -> string_of_term a ^ " + " ^ string_of_term b
   | Mul (a, b)  -> string_of_term a ^ " + " ^ string_of_term b
+  | Function (s, args) -> s ^ "(" ^ comma_separate (List.map string_of_term args) ^ ")"
 
-let rec string_of_expression =
-  let rec comma_separate = function
-    | []  -> ""
-    | [a] -> a
-    | x :: xs -> x ^ "," ^ comma_separate xs
-  in function
+let rec string_of_expression = function
   | Not e            -> "!" ^ string_of_expression e
   | And (a, b)       -> "(" ^ string_of_expression a ^ " & " ^ string_of_expression b ^ ")"
   | Or (a, b)        -> "(" ^ string_of_expression a ^ " | " ^ string_of_expression b ^ ")"
@@ -56,6 +58,7 @@ let rec substitute_in_term get_var = function
                        substitute_in_term get_var b)
   | Succ a -> Succ (substitute_in_term get_var a)
   | Zero -> Zero
+  | Function (s, args) -> Function (s, List.map (substitute_in_term get_var) args)
 
 let rec substitute get_var = function
   | PVar name   -> to_expr (get_var name)

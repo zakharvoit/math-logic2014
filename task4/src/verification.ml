@@ -34,7 +34,10 @@ exception NotFree of int * term * expression * string
 exception FreeIn of int * string * expression
 
 let free_vars_in_expr =
-  let rec free_vars_in_term bound free = function
+  let rec free_vars_in_all bound free = function
+    | [] -> free
+    | (x :: xs) -> free_vars_in_all bound (free_vars_in_term bound free x) xs
+  and free_vars_in_term bound free = function
     | Plus (a, b)
     | Mul (a, b) -> free_vars_in_term bound (free_vars_in_term bound free a) b
     | Succ a -> free_vars_in_term bound free a
@@ -42,11 +45,8 @@ let free_vars_in_expr =
     | Var a -> if List.mem a bound
                then free
                else a :: free
-  in
-
-  let rec free_vars_in_all bound free = function
-    | [] -> free
-    | (x :: xs) -> free_vars_in_all bound (free_vars_in_term bound free x) xs
+    | Function (f, args)
+      -> free_vars_in_all bound free args
   in
 
   let rec free_vars' bound (free : string list) = function
@@ -70,6 +70,9 @@ let free_vars =
     | Var a -> if List.mem a bound
                then free
                else a :: free
+    | Function (s, args)
+      -> Util.sort_uniq compare (List.concat 
+          (List.map (free_vars_in_term bound free) args))
    in free_vars_in_term [] []
 
 (* Can be x substituted with a in b? *)
@@ -88,6 +91,8 @@ let free_for_substitution a x b =
                             true
                             (List.map (fun x -> not (List.mem x bound)) free)
     | Var a -> true
+    | Function (s, args)
+      -> List.fold_left (&&) true (List.map (free_in_term bound) args)
   in
 
   let rec free_for_substitution' bound = function
@@ -134,8 +139,9 @@ let matches a b =
       -> term_matches a' b'
     | (Zero, Zero)
       -> true
-    | (_, _)
-      -> false
+    | (Function (s, a), Function (s', a')) when s = s'
+      -> List.fold_left (&&) true (List.map2 (term_matches) a a')
+    | (_, _) -> false
   in
       
   let rec matches' a b = match (a, b) with
@@ -162,6 +168,8 @@ let rec substitute_term x s = function
   | Var y -> if y = x
              then s
              else Var y
+  | Function (name, args)
+    -> Function (name, List.map (substitute_term x s) args)
 
 let rec substitute x s = function
   | Forall (v, e) ->

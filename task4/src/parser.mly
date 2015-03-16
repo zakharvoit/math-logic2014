@@ -24,9 +24,9 @@
 %type <Arithmetic.expression> expr_line
 %%
 
-  assumptions_line: TTourniquet expr TEoln { ([], $2) }
-     | csexprs TTourniquet expr TEoln { ($1, $3) }
-    ;
+assumptions_line: TTourniquet expr TEoln { ([], $2) }
+   | csexprs TTourniquet expr TEoln { ($1, $3) }
+   ;
 
 csexprs: expr                { [$1] }
        | csexprs TComma expr { $3 :: $1 }
@@ -41,6 +41,7 @@ term: TOpenPar term TClosePar { $2 }
     | term TQuote             { E.Succ $1 }
     | term TPlus term         { E.Plus ($1, $3) }
     | term TMul term          { E.Mul ($1, $3) }
+    | TVar TOpenPar csterms TClosePar { E.Function ($1, List.rev $3) } 
     ;
 
 expr: expr TAnd expr              { E.And ($1, $3) }
