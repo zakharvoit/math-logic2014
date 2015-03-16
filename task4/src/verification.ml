@@ -81,7 +81,9 @@ let free_for_substitution a x b =
     | Mul (a, b) -> free_in_term bound a && free_in_term bound b
     | Succ a -> free_in_term bound a
     | Zero -> true
-    | Var a when a = x -> List.fold_left
+    | Var a when a = x
+              && not (List.mem a bound)
+              -> List.fold_left
                             (&&)
                             true
                             (List.map (fun x -> not (List.mem x bound)) free)
@@ -196,7 +198,7 @@ let get_substitution x a b =
       -> y = z
     | (Plus (a1, a2), Plus (b1, b2))
     | (Mul (a1, a2), Plus (b1, b2))
-      -> substituted_term a1 b1 x_free && substituted_term b1 b2 x_free
+      -> substituted_term a1 b1 x_free && substituted_term a2 b2 x_free
     | (Succ a', Succ b')
       -> substituted_term a' b' x_free
     | (Zero, Zero)
@@ -282,8 +284,8 @@ let verify assumpts proof =
   let check_predicate_axiom e =
     let check_for_free x a b =
       match get_substitution x a b with
-      | Some s -> free_for_substitution s x a
-      | None -> false
+      | Some s -> print_endline (string_of_term s); free_for_substitution s x a
+      | None -> print_endline "asdsadasd"; false
     in
 
     match e with
