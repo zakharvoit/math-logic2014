@@ -13,7 +13,7 @@ module O = Ordinal
 %%
 
 comparison:
-        ordinal TEq ordinal TEof { O.cmp $1 $3 = 0 }
+        ordinal TEq ordinal TEof { (* print_endline (O.to_str $1); print_endline (O.to_str $3); *) $1 = $3 }
     ;
 
 ordinal: TNum                    { O.Nat (int_of_string $1) }

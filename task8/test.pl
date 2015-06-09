@@ -28,9 +28,7 @@ while (glob "./test-files/*.in") {
         print colored ['red'], "Bad output on $_\n";
         next;
     }
-    if (${^CHILD_ERROR_NATIVE} != 0) {
-        print colored ['red'], "RE on $_\n";
-    } elsif ($output == $expected) {
+    if ($output == $expected) {
         print colored ['green'], "OK on $_\n";
     } else {
         print colored ['red'], "WA on $_\n";
