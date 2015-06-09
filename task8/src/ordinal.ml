@@ -1,6 +1,8 @@
 type ordinal = Nat of int
              | Big of ordinal * int * ordinal
 
+let omega = Big (Nat 1, 1, Nat 0)
+
 (* First exponent *)
 let fe = function
   | Nat _ -> Nat 0
@@ -16,9 +18,7 @@ let rest = function
   | Nat a -> failwith "Rest: Not Nat expected"
   | Big (_, _, r) -> r
 
-let unite a b = match a with
-  | (x, y) -> Big (x, y, b)
-  | _ -> failwith "Unite: Pair expected"
+let unite a b = let (x, y) = a in Big (x, y, b)
 
 let rec cmp a b = match (a, b) with
   | (Nat a, Nat b) -> compare a b

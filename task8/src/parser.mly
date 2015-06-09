@@ -22,5 +22,5 @@ ordinal: TNum                    { O.Nat (int_of_string $1) }
     | ordinal TSub ordinal       { O.sub $1 $3 }
     | ordinal TMul ordinal       { O.mul $1 $3 }
     | ordinal TExp ordinal       { O.exp $1 $3 }
-    | TOmega                     { failwith "Omega for now is not supported" }
+    | TOmega                     { O.omega }
     ;
