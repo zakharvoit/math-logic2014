@@ -143,7 +143,7 @@ let matches a b =
       -> List.fold_left (&&) true (List.map2 (term_matches) a a')
     | (_, _) -> false
   in
-      
+
   let rec matches' a b = match (a, b) with
     | (Impl (a1, a2), Impl (b1, b2))
     | (Or (a1, a2), Or (b1, b2))
@@ -211,11 +211,11 @@ let get_substitution x a b =
       -> substituted_term a' b' x_free
     | (Zero, Zero)
       -> true
+    | (Function (f1, p1), Function (f2, p2)) when f1 = f2
+      -> all_substituted p1 p2 x_free
     | _
       -> false
-  in
-
-  let all_substituted a b x_free =
+  and all_substituted a b x_free =
     List.length a = List.length b
     && List.fold_left (&&) true
                       (List.map2 (fun x y -> substituted_term x y x_free) a b)
@@ -254,13 +254,13 @@ let substituted x a b =
   match get_substitution x a b with
   | Some _ -> true
   | None -> false
-            
+
 let verify assumpts proof =
   let right = H.create 1024 in
   let answer = H.create 1024 in
   let proved = H.create 1024 in
   let annotations = Array.make (Array.length proof) (ByAxiom 0) in
-  
+
   let check_list l p f =
     for i = 0 to Array.length l - 1 do
       if p l.(i) then begin
@@ -292,8 +292,8 @@ let verify assumpts proof =
   let check_predicate_axiom e =
     let check_for_free x a b =
       match get_substitution x a b with
-      | Some s -> print_endline (string_of_term s); free_for_substitution s x a
-      | None -> print_endline "asdsadasd"; false
+      | Some s -> free_for_substitution s x a
+      | None -> false
     in
 
     match e with
