@@ -1,4 +1,0 @@
-A(z) -> B(y), C |- D
-A(z) -> B(y)
-?z A(z) -> B(y)
-A(z) -> @y B(y)
