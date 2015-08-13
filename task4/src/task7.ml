@@ -33,6 +33,6 @@ let prove_divisibility a b = (* TODO: Add \exists *)
 let _ = let a = read_int () in
 	let b = read_int () in
 	if b mod a = 0 then
-	  List.iter (print_endline |> string_of_expression) (prove_divisibility a b)
+	  List.iter (print_endline |> string_of_expression) (remove_repeats (prove_divisibility a b))
 	else
 	  failwith "A should divide B"

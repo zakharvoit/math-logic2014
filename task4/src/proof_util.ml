@@ -2,6 +2,8 @@ open Arithmetic
 open Deduction
 open Verification
 
+module H = Hashtbl
+
 let rec repr = function
   | 0 -> Zero
   | x -> Succ (repr (x - 1))
@@ -27,4 +29,12 @@ let (+++) a b = Plus (a, b)
 let (!++) a = Succ a
 let (%**) a b = Mul (a, b)
 
+let remove_repeats l =
+  let table = H.create 100000 in
+  let rec fold = function
+    | [] -> []
+    | x :: xs -> if H.mem table x then fold xs
+		 else begin H.add table x (); x :: fold xs end
+  in fold l
+	    
 let concat a b = a ^ b
