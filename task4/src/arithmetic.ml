@@ -32,9 +32,9 @@ let rec comma_separate = function
 let rec string_of_term = function
   | Zero        -> "0"
   | Var s       -> s
-  | Succ a      -> string_of_term a ^ "'"
-  | Plus (a, b) -> string_of_term a ^ " + " ^ string_of_term b
-  | Mul (a, b)  -> string_of_term a ^ " + " ^ string_of_term b
+  | Succ a      -> string_of_term a
+  | Plus (a, b) -> "(" ^ string_of_term a ^ " + " ^ string_of_term b ^ ")"
+  | Mul (a, b)  -> "(" ^ string_of_term a ^ " * " ^ string_of_term b ^ ")"
   | Function (s, args) -> s ^ "(" ^ comma_separate (List.map string_of_term args) ^ ")"
 
 let rec string_of_expression = function
