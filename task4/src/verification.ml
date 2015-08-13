@@ -205,7 +205,7 @@ let get_substitution x a b =
     | (Var y, Var z)
       -> y = z
     | (Plus (a1, a2), Plus (b1, b2))
-    | (Mul (a1, a2), Plus (b1, b2))
+    | (Mul (a1, a2), Mul (b1, b2))
       -> substituted_term a1 b1 x_free && substituted_term a2 b2 x_free
     | (Succ a', Succ b')
       -> substituted_term a' b' x_free
