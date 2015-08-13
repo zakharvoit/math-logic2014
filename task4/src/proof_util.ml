@@ -26,3 +26,5 @@ let (@===) a b = Predicate ("=", [a ; b])
 let (+++) a b = Plus (a, b)
 let (!++) a = Succ a
 let (%**) a b = Mul (a, b)
+
+let concat a b = a ^ b
