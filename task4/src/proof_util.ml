@@ -19,7 +19,7 @@ let (^^-->) a p =
   let p_a = Array.of_list p in
   let annot = verify (Array.of_list a) p_a in
   let a' = List.rev a in
-  Array.to_list (deduce p_a annot (Array.of_list (List.tl a')) (List.hd a))
+  Array.to_list (deduce p_a annot (Array.of_list (List.tl a')) (List.hd a'))
 let (!!!) a = Not a
 let (!@@) a = fun x -> Forall (a, x)
 let (!??) a = fun x -> Exists (a, x)

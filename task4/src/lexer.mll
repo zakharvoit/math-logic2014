@@ -4,7 +4,7 @@
 
 let whitespace = [' ' '\t' '\r']
 let variable   = ['a'-'z']['0'-'9']*
-let predicate  = ['A'-'Z']['0'-'9']*
+let predicate  = ['A'-'Z']['A'-'Z''0'-'9']*
 
 rule token = parse
              | whitespace       { token lexbuf }

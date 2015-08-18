@@ -38,14 +38,14 @@ let rec string_of_term = function
   | Function (s, args) -> s ^ "(" ^ comma_separate (List.map string_of_term args) ^ ")"
 
 let rec string_of_expression = function
-  | Not e            -> "!" ^ string_of_expression e
+  | Not e            -> "(!" ^ string_of_expression e ^ ")"
   | And (a, b)       -> "(" ^ string_of_expression a ^ " & " ^ string_of_expression b ^ ")"
   | Or (a, b)        -> "(" ^ string_of_expression a ^ " | " ^ string_of_expression b ^ ")"
   | Impl (a, b)      -> "(" ^ string_of_expression a ^ " -> " ^ string_of_expression b ^ ")"
   | Forall (x, e)    -> "@" ^ x ^ " " ^ string_of_expression e
   | Exists (x, e)    -> "?" ^ x ^ " " ^ string_of_expression e
   | Predicate (p, l) -> if p = "="
-                        then string_of_term (List.hd l) ^ " = " ^ string_of_term (List.hd (List.tl l))
+                        then "(" ^ string_of_term (List.hd l) ^ " = " ^ string_of_term (List.hd (List.tl l)) ^ ")"
                         else p ^ "(" ^ comma_separate (List.map string_of_term l) ^ ")"
   | PVar s           -> s
 

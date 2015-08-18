@@ -1,4 +1,3 @@
-module H = Hashtbl
 let classical_axioms = Array.map (Util.parse_string Parser.expr_line)
                        [| "A -> B -> A"
                         ; "(A -> B) -> (A -> B -> C) -> (A -> C)"

@@ -402,6 +402,16 @@ let verify assumpts proof =
       | ModusPonensFound (a, b) -> annotations.(i) <- ByModusPonens (a, b)
       | Rule1Found a            -> annotations.(i) <- ByRule1 a
       | Rule2Found a            -> annotations.(i) <- ByRule2 a
+      | NotFound a              -> begin for j = 0 to a do
+					   print_int (j + 1);
+					   print_string "    ";
+					   print_string (string_of_expression proof.(j));
+					   print_string "    ";
+					   print_endline (string_of_annotation annotations.(j));
+					 done;
+					 print_endline ("Error at line " ^ string_of_int (a + 1));
+					 failwith "Ended execution"
+				   end
       (* Don't catch other exceptions, delegate its to the main function. *)
     end;
     update_modus_ponens e i;
