@@ -1,5 +1,7 @@
 (* Function composition operator *)
 let (|>) f g x = f (g x)
+(* Tail-recursive concatenation *)
+let (@@@) a b = a @ b (*List.rev_append (List.rev a) b*)
 
 let parse_string parser = parser Lexer.token
                                |> Lexing.from_string

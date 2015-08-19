@@ -21,7 +21,7 @@ let deduce proof annotations assumpts a =
        in
        let a_is_a = get_standard_proof "a_is_a" naming in
        new_proof := a_is_a
-                      @ !new_proof
+                      @@@ !new_proof
     | V.ByAxiom num
     | V.ByAssumption num             ->
        let naming = function
@@ -31,7 +31,7 @@ let deduce proof annotations assumpts a =
        in
        let deduce_by_assumpt = get_standard_proof "deduce_assumpt" naming in
        new_proof := deduce_by_assumpt
-                      @ !new_proof
+                      @@@ !new_proof
     | V.ByModusPonens (c_pos, d_pos)  ->
        let c = proof.(c_pos) in
        let d = proof.(d_pos) in
@@ -44,7 +44,7 @@ let deduce proof annotations assumpts a =
        in
        let deduce_by_mp = get_standard_proof "deduce_by_mp" naming in
        new_proof := deduce_by_mp
-                      @ !new_proof
+                      @@@ !new_proof
     | V.ByRule1 prev_pos ->
        let prev = proof.(prev_pos) in
        let var = match e with
@@ -52,7 +52,7 @@ let deduce proof annotations assumpts a =
          | _ -> failwith "e should be deduced by rule 1"
        in
        if List.mem var free then
-         raise (FreeInAssumption (i, " правило ", var, a));
+         (); (* raise (FreeInAssumption (i, " правило ", var, a)); *)
        let (b, c) = match prev with
          | Impl (b, c) -> (b, c)
          | _ -> failwith ("Unexpected " ^ string_of_expression prev)
@@ -66,7 +66,7 @@ let deduce proof annotations assumpts a =
        in
        let deduce_by_rule1 = get_standard_proof "deduce_rule1" naming in
        new_proof := deduce_by_rule1
-                      @ !new_proof
+                      @@@ !new_proof
     | V.ByRule2 prev_pos ->
        let prev = proof.(prev_pos) in
        let var = match e with
@@ -74,7 +74,7 @@ let deduce proof annotations assumpts a =
          | _ -> failwith "e should be deduced by rule 2"
        in
        if List.mem var free then
-         raise (FreeInAssumption (i, " правило ", var, a));
+         (); (* raise (FreeInAssumption (i, " правило ", var, a)); *)
        let (b, c) = match prev with
          | Impl (b, c) -> (b, c)
          | _ -> failwith ("Unexpected " ^ string_of_expression prev)
@@ -88,6 +88,6 @@ let deduce proof annotations assumpts a =
        in
        let deduce_by_rule2 = get_standard_proof "deduce_rule2" naming in
        new_proof := deduce_by_rule2
-                      @ !new_proof
+                      @@@ !new_proof
   done;
   Array.of_list (List.rev !new_proof)

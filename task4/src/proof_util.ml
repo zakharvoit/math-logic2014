@@ -31,10 +31,12 @@ let (%**) a b = Mul (a, b)
 
 let remove_repeats l =
   let table = H.create 100000 in
-  let rec fold = function
-    | [] -> []
-    | x :: xs -> if H.mem table x then fold xs
-		 else begin H.add table x (); x :: fold xs end
-  in fold l
+  let rec fold acc = function
+    | [] -> acc
+    | x :: xs -> if H.mem table x then fold acc xs
+		 else begin H.add table x (); fold (x :: acc) xs end
+  in List.rev (fold [] l)
 	    
 let concat a b = a ^ b
+		  
+    

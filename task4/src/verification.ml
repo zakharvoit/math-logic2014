@@ -412,6 +412,14 @@ let verify assumpts proof =
 					 print_endline ("Error at line " ^ string_of_int (a + 1));
 					 failwith "Ended execution"
 				   end
+      | FreeIn (j, x, a) -> begin
+	  for i = j - 50 to j do
+	    print_endline ("(" ^ string_of_int i ^ ")    " ^ string_of_expression proof.(i)
+			  ^ "     " ^ string_of_annotation annotations.(i));
+	  done;
+	  print_endline ("FreeIn: " ^ string_of_int j ^ " for variable " ^ x ^ " and expression " ^ string_of_expression a);
+	  failwith "Ended execution"
+	end
       (* Don't catch other exceptions, delegate its to the main function. *)
     end;
     update_modus_ponens e i;

@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 
 while (<>) {
+    s/@/@@@/g;
     s/\(\*/QWERT/g;
     s/\*\)/TREWQ/g;
     s/&/  ASDFASDF  /g;
