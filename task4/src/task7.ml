@@ -4,6 +4,7 @@ open Proofs
 open Proof_util
 open Verification
 open Minimizer
+open Scanf
 
 (* a = b |- a + [x] = b + [x]  *)
 let rec add_constant a b = function
@@ -46,8 +47,8 @@ let prove_needed a b =
   if a mod b = 0 then prove_divisibility b a
   else prove_not_divisibility b a
 
-let _ = let a = read_int () in
-	let b = read_int () in
+let _ = let a = bscanf Scanning.stdin "%d " (fun x -> x) in
+	let b = bscanf Scanning.stdin "%d" (fun x -> x) in
 	let raw_proof = prove_needed a b in
 	prerr_endline "Proof generated";
 	let proof = Array.of_list (remove_repeats raw_proof) in
