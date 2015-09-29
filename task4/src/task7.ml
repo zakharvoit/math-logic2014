@@ -29,10 +29,14 @@ let rec prove_mul a = function
           prove_sum (a * b) a @@@ (* [a * b] + [a] = [a * b + a] *)
 	  step_mul (repr a) (repr b) (repr (a * b)) (repr (a * b + a))
 
-let prove_divisibility a b = (* TODO: Add \exists *)
-  prove_mul a (b / a)
-
 let equal a b = Predicate ("=", [a; b])
+
+let prove_divisibility a b =
+  prove_mul a (b / a) @
+  [ Impl (equal (Mul (repr a, repr (b / a))) (repr b),
+           Exists ("x", equal (Mul (repr a, Var "x")) (repr b)))
+  ; Exists ("x", equal (Mul (repr a, Var "x")) (repr b))
+  ]
 
 let prove_not_divisibility a b =
   not_divides a b (Var "x") @
