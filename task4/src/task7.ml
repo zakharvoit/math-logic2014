@@ -32,8 +32,15 @@ let rec prove_mul a = function
 let prove_divisibility a b = (* TODO: Add \exists *)
   prove_mul a (b / a)
 
-let prove_needed a b = if a mod b = 0 then prove_divisibility b a
-		       else not_divides b a (Var "x")
+let equal a b = Predicate ("=", [a; b])
+
+let prove_not_divisibility a b =
+  not_divides a b (Var "x") @
+  introduce_exists (equal (Mul (repr a, Var "x")) (repr b))
+
+let prove_needed a b =
+  if a mod b = 0 then prove_divisibility b a
+  else prove_not_divisibility b a
 
 let _ = let a = read_int () in
 	let b = read_int () in
